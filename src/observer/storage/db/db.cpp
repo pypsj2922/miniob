@@ -412,6 +412,31 @@ RC Db::init_dblwr_buffer()
   return RC::SUCCESS;
 }
 
+//drop table
+RC Db::drop_table(const char *table_name)
+{
+    RC rc = RC::SUCCESS;
+
+    // 检查表是否存在
+    Table *table = find_table(table_name);
+    if (table == nullptr) {
+        LOG_WARN("Failed to find table %s.", table_name);
+        return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+
+    // 删除表
+    rc = table->drop(table_name);
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to drop table %s.", table_name);
+        return rc;
+    }
+
+    // 从打开的表中移除
+    opened_tables_.erase(table_name);
+
+    return RC::SUCCESS;
+}
+
 LogHandler        &Db::log_handler() { return *log_handler_; }
 BufferPoolManager &Db::buffer_pool_manager() { return *buffer_pool_manager_; }
 TrxKit            &Db::trx_kit() { return *trx_kit_; }
